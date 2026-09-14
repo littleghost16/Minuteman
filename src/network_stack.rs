@@ -46,7 +46,7 @@ impl NetworkStack {
             self.leases_path
         );
 
-        // 1. Spawn Lease File Watcher (supports dnsmasq, ISC DHCP, Kea, OpenWrt)
+
         let leases_path = self.leases_path.clone();
         let db_watcher = self.db.clone();
         let running_watcher = self.running.clone();
@@ -60,7 +60,6 @@ impl NetworkStack {
             }
         });
 
-        // 2. Spawn Live UDP 67/68 DHCP Protocol Sniffer
         let db_sniffer = self.db.clone();
         let running_sniffer = self.running.clone();
 
@@ -68,7 +67,7 @@ impl NetworkStack {
             Self::run_live_dhcp_sniffer(db_sniffer, running_sniffer).await;
         });
 
-        // 3. Spawn ARP & Neighbor Cache Scanner
+
         let db_arp = self.db.clone();
         let running_arp = self.running.clone();
 
@@ -90,13 +89,13 @@ impl NetworkStack {
     ) {
         let mut found_file = false;
 
-        // Check user provided path
+
         if leases_path.exists() {
             found_file = true;
             Self::parse_file_and_record(leases_path, db, seen_leases);
         }
 
-        // Check common Unix/Linux DHCP lease paths
+
         let standard_paths = [
             "/var/lib/misc/dnsmasq.leases",
             "/var/lib/dhcp/dhcpd.leases",
@@ -123,7 +122,7 @@ impl NetworkStack {
             let path_str = path.to_string_lossy().to_string();
 
             if path_str.ends_with("dhcpd.leases") {
-                // Parse ISC DHCP format
+
                 for lease in Self::parse_isc_dhcpd_leases(&content) {
                     let key = format!("{}_{}", lease.mac_address, lease.ip_address);
                     if !seen.contains(&key) {
@@ -136,7 +135,7 @@ impl NetworkStack {
                     }
                 }
             } else if path_str.ends_with(".csv") {
-                // Parse Kea CSV format
+      
                 for lease in Self::parse_kea_csv_leases(&content) {
                     let key = format!("{}_{}", lease.mac_address, lease.ip_address);
                     if !seen.contains(&key) {
@@ -145,7 +144,7 @@ impl NetworkStack {
                     }
                 }
             } else {
-                // Parse dnsmasq / OpenWrt format
+            
                 for line in content.lines() {
                     let trimmed = line.trim();
                     if trimmed.is_empty() || trimmed.starts_with('#') {
